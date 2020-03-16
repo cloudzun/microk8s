@@ -1,0 +1,59 @@
+#cloud-config
+package_upgrade: true
+write_files:
+  - path: /etc/systemd/system/docker.service.d/docker.conf
+    content: |
+      [Service]
+        ExecStart=
+        ExecStart=/usr/bin/dockerd
+  - path: /etc/docker/daemon.json
+    content: |
+      {
+        "hosts": ["fd://","tcp://0.0.0.0:2375"]
+      }
+runcmd:
+
+  - curl -sSL https://get.docker.com/ | sh
+  - usermod -aG docker chengzh
+  - snap install microk8s --classic --channel=1.14/stable
+  - snap alias microk8s.kubectl kubectl
+  - usermod -a -G microk8s chengzh
+
+  - docker pull mirrorgooglecontainers/pause:3.1
+  - docker pull mirrorgooglecontainers/heapster-influxdb-amd64:v1.3.3
+  - docker pull mirrorgooglecontainers/heapster-grafana-amd64:v4.4.3
+  - docker pull mirrorgooglecontainers/kubernetes-dashboard-amd64:v1.8.3
+  - docker pull mirrorgooglecontainers/heapster-amd64:v1.5.2
+  - docker pull mirrorgooglecontainers/k8s-dns-dnsmasq-nanny-amd64:1.14.7
+  - docker pull mirrorgooglecontainers/k8s-dns-kube-dns-amd64:1.14.7
+  - docker pull mirrorgooglecontainers/k8s-dns-sidecar-amd64:1.14.7
+
+  - docker tag mirrorgooglecontainers/pause:3.1 k8s.gcr.io/pause:3.1
+  - docker tag mirrorgooglecontainers/heapster-influxdb-amd64:v1.3.3 k8s.gcr.io/heapster-influxdb-amd64:v1.3.3
+  - docker tag mirrorgooglecontainers/heapster-grafana-amd64:v4.4.3 k8s.gcr.io/heapster-grafana-amd64:v4.4.3
+  - docker tag mirrorgooglecontainers/kubernetes-dashboard-amd64:v1.8.3 k8s.gcr.io/kubernetes-dashboard-amd64:v1.8.3
+  - docker tag mirrorgooglecontainers/heapster-amd64:v1.5.2 k8s.gcr.io/heapster-amd64:v1.5.2
+  - docker tag mirrorgooglecontainers/k8s-dns-dnsmasq-nanny-amd64:1.14.7 gcr.io/google_containers/k8s-dns-dnsmasq-nanny-amd64:1.14.7
+  - docker tag mirrorgooglecontainers/k8s-dns-kube-dns-amd64:1.14.7 gcr.io/google_containers/k8s-dns-kube-dns-amd64:1.14.7
+  - docker tag mirrorgooglecontainers/k8s-dns-sidecar-amd64:1.14.7 gcr.io/google_containers/k8s-dns-sidecar-amd64:1.14.7
+
+  - docker save k8s.gcr.io/pause > pause.tar
+  - docker save k8s.gcr.io/heapster-influxdb-amd64 > heapster-influxdb-amd64.tar
+  - docker save k8s.gcr.io/heapster-grafana-amd64 > heapster-grafana-amd64.tar
+  - docker save k8s.gcr.io/kubernetes-dashboard-amd64 > kubernetes-dashboard-amd64.tar
+  - docker save k8s.gcr.io/heapster-amd64 > heapster-amd64.tar
+  - docker save gcr.io/google_containers/k8s-dns-dnsmasq-nanny-amd64 > k8s-dns-dnsmasq-nanny-amd64.tar
+  - docker save gcr.io/google_containers/k8s-dns-kube-dns-amd64 > k8s-dns-kube-dns-amd64.tar
+  - docker save gcr.io/google_containers/k8s-dns-sidecar-amd64 > k8s-dns-sidecar-amd64.tar
+
+  - microk8s.ctr -n k8s.io image import pause.tar
+  - microk8s.ctr -n k8s.io image import heapster-influxdb-amd64.tar
+  - microk8s.ctr -n k8s.io image import heapster-grafana-amd64.tar
+  - microk8s.ctr -n k8s.io image import kubernetes-dashboard-amd64.tar
+  - microk8s.ctr -n k8s.io image import heapster-amd64.tar
+  - microk8s.ctr -n k8s.io image import k8s-dns-dnsmasq-nanny-amd64.tar
+  - microk8s.ctr -n k8s.io image import k8s-dns-kube-dns-amd64.tar
+  - microk8s.ctr -n k8s.io image import k8s-dns-sidecar-amd64.tar
+
+  - microk8s.enable dns dashboard
+
