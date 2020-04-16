@@ -25,6 +25,6 @@ az vm create --resource-group rancherlab --name ranchervm08 --public-ip-address-
 az vm open-port --resource-group rancherlab --name ranchervm08 --port 0-65535 --priority 1001
 
 
-az group delete -n  rancherlab --yes
+
 
 
