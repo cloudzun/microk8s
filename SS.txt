@@ -15,8 +15,9 @@ runcmd:
 
   - curl -sSL https://get.docker.com/ | sh
   - usermod -aG docker chengzh
-  - snap install microk8s --classic
+  - snap install microk8s --classic --channel=1.14/stable
   - snap alias microk8s.kubectl kubectl
   - usermod -a -G microk8s chengzh
   - microk8s.enable dns dashboard
+  
 
